@@ -31,6 +31,7 @@ function parser (tokenIter) {
 /**
  * <Expression> ::=
  *   <AdditiveExpression><EOF>
+ *   |<AdditiveExpression>")"
  */
 function Expression (source) {
   if (source[0].type === 'AdditiveExpression' && source[1].type === 'EOF') {
@@ -41,29 +42,27 @@ function Expression (source) {
     source.unshift(node)
     return node
   }
+  if (source[0].type === 'AdditiveExpression' && source[1].type === 'rb') {
+    let node = {
+      type: 'Expression',
+      children: [source.shift(), source.shift()]
+    }
+    source.unshift(node)
+    return node
+  }
+  if (source[0].type === 'Expression')
+    return source[0]
   AdditiveExpression(source)
   return Expression(source)
 }
 
 /*
  * <AdditiveExpression> ::=
- *   "("<AdditiveExpression>")"
  *   |<MultiplicativeExpression>
  *   |<AdditiveExpression>"+"<MultiplicativeExpression>
  *   |<AdditiveExpression>"-"<MultiplicativeExpression>
  */
 function AdditiveExpression (source) {
-  if (source[0].type === 'lb' && source[1].type === 'AdditiveExpression' && source[2] === 'rb') {
-    let node = {
-      type: 'AdditiveExpression',
-      children: []
-    }
-    node.children.push(source.shift())
-    node.children.push(source.shift())
-    node.children.push(source.shift())
-    source.unshift(node)
-    return AdditiveExpression(source)
-  }
   if (source[0].type === 'MultiplicativeExpression') {
     let node = {
       type: 'AdditiveExpression',
@@ -96,24 +95,12 @@ function AdditiveExpression (source) {
 
 /*
  * <MultiplicativeExpression> ::=
- *   "("<MultiplicativeExpression>")"
- *   |<Number>
- *   |<MultiplicativeExpression>"*"<Number>
- *   |<MultiplicativeExpression>"/"<Number>
+ *   |<NumberOrExpression>
+ *   |<MultiplicativeExpression>"*"<NumberOrExpression>
+ *   |<MultiplicativeExpression>"/"<NumberOrExpression>
  */
 function MultiplicativeExpression (source) {
-  if (source[0].type === 'lb' && source[1].type === 'MultiplicativeExpression' && source[2] === 'rb') {
-    let node = {
-      type: 'MultiplicativeExpression',
-      children: []
-    }
-    node.children.push(source.shift())
-    node.children.push(source.shift())
-    node.children.push(source.shift())
-    source.unshift(node)
-    return MultiplicativeExpression(source)
-  }
-  if (source[0].type === 'number') {
+  if (source[0].type === 'NumberOrExpression') {
     let node = {
       type: 'MultiplicativeExpression',
       children: [source[0]]
@@ -121,7 +108,7 @@ function MultiplicativeExpression (source) {
     source[0] = node
     return MultiplicativeExpression(source)
   }
-    if (source[0].type === 'MultiplicativeExpression' && source[1] && source[1].type === 'op' && ['*', '/'].includes(source[1].value)) {
+  if (source[0].type === 'MultiplicativeExpression' && source[1] && source[1].type === 'op' && ['*', '/'].includes(source[1].value)) {
     let node = {
       type: 'MultiplicativeExpression',
       operator: source[1].value,
@@ -135,5 +122,37 @@ function MultiplicativeExpression (source) {
   }
   if (source[0].type === 'MultiplicativeExpression')
     return source[0]
+  NumberOrExpression(source)
   return MultiplicativeExpression(source)
+}
+
+/**
+ * <NumberOrExpression> ::=
+ *   <Number>
+ *   |"("<Expression>
+ */
+function NumberOrExpression (source) {
+  if (source[0].type === 'number') {
+    let node = {
+      type: 'NumberOrExpression',
+      children: [source.shift()]
+    }
+    source.unshift(node)
+    return NumberOrExpression(source)
+  }
+  if (source[0].type === 'lb') {
+    let node = {
+      type: 'NumberOrExpression',
+      children: []
+    }
+    node.children.push(source.shift())
+    Expression(source)
+    node.children.push(source.shift())
+    source.unshift(node)
+    return NumberOrExpression(source)
+  }
+  if (source[0].type === 'NumberOrExpression') {
+    return source[0]
+  }
+  return NumberOrExpression(source)
 }
