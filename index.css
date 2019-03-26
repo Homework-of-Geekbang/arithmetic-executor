@@ -1,0 +1,27 @@
+.result {
+  display: flex;
+  align-items: center;
+}
+.result > div {
+  font-size: 24px;
+  padding-top: 5px;
+}
+.tip {
+  color: #666;
+  font-size: 12px;
+  padding-left: 1em;
+}
+input {
+  padding: 0 0.5em;
+}
+code {
+  background-color: #ccc;
+  padding: 0 0.3em;
+  border-radius: 2px;
+  color: #000;
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#answer {
+  color: #17ae17;
+}
