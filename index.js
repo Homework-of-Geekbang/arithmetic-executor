@@ -81,7 +81,7 @@ function AdditiveExpression (source) {
       children: []
     }
     node.children.push(source.shift())
-    node.children.push(source.shift())
+    source.shift()
     MultiplicativeExpression(source)
     node.children.push(source.shift())
     source.unshift(node)
@@ -115,7 +115,7 @@ function MultiplicativeExpression (source) {
       children: []
     }
     node.children.push(source.shift())
-    node.children.push(source.shift())
+    source.shift()
     node.children.push(source.shift())
     source.unshift(node)
     return MultiplicativeExpression(source)
